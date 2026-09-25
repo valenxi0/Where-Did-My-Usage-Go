@@ -2,7 +2,7 @@
 
 [![test](https://github.com/valenxi0/Where-Did-My-Usage-Go/actions/workflows/test.yml/badge.svg)](https://github.com/valenxi0/Where-Did-My-Usage-Go/actions/workflows/test.yml)
 
-You hit your weekly limit on Wednesday and have no idea how. This skill finds out.
+POV: It's Wednesday, you're out of usage and there are no resets coming to save you. You wonder where all of your usage went? This skill tells you how.
 
 It reads the history that Claude Code, Codex, Devin, and other coding agents already save on your machine, and turns your week into a card you can post. The card shows how many tokens you used, what they would cost at API list prices, which tools and projects used them, how much of your plan limit went, and a roast.
 
