@@ -1,0 +1,137 @@
+{
+  "window_start": "2026-09-17T12:00:00-07:00",
+  "window_end": "2026-09-24T12:00:00-07:00",
+  "sources": [],
+  "sessions": [
+    {
+      "agent": "Codex",
+      "session_id": "fictional-codex",
+      "project": "/fictional/Recipe Atlas",
+      "tokens": {
+        "input_tokens": 312400000,
+        "output_tokens": 2140000,
+        "cached_input_tokens": 296800000
+      },
+      "model_usage": [
+        {
+          "model": "gpt-6-sol",
+          "tokens": {
+            "input_tokens": 312400000,
+            "output_tokens": 2140000,
+            "cached_input_tokens": 296800000,
+            "cache_write_tokens": 0
+          }
+        }
+      ],
+      "habits": {
+        "prompts": 31,
+        "nudges": 2,
+        "stuck": 4,
+        "polite": 3,
+        "late_night": 2,
+        "hours": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          3,
+          4,
+          2,
+          3,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "agent": "Claude Code",
+      "session_id": "fictional-claude",
+      "project": "/fictional/Weekend Game",
+      "tokens": {
+        "input_tokens": 148600000,
+        "output_tokens": 1310000,
+        "cached_input_tokens": 139200000
+      },
+      "model_usage": [
+        {
+          "model": "claude-sonnet-5",
+          "tokens": {
+            "input_tokens": 148600000,
+            "output_tokens": 1310000,
+            "cached_input_tokens": 139200000,
+            "cache_write_tokens": 0,
+            "cache_write_1h_tokens": 0
+          }
+        }
+      ],
+      "habits": {
+        "prompts": 17,
+        "nudges": 1,
+        "stuck": 1,
+        "polite": 2,
+        "late_night": 0,
+        "hours": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          2,
+          1,
+          2,
+          3,
+          2,
+          2,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "agent": "OpenCode",
+      "session_id": "fictional-opencode",
+      "project": "/fictional/Ideas Lab",
+      "tokens": null,
+      "model_usage": []
+    }
+  ],
+  "previous_window": {
+    "window_start": "2026-09-10T12:00:00-07:00",
+    "window_end": "2026-09-17T12:00:00-07:00",
+    "agents": [
+      "Codex",
+      "Claude Code",
+      "OpenCode",
+      "Factory Droid",
+      "Kimi Code",
+      "Grok"
+    ],
+    "sessions": 2,
+    "total_tokens": 191300000
+  }
+}

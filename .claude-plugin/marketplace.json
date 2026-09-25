@@ -1,0 +1,12 @@
+{
+  "name": "where-did-my-usage-go",
+  "description": "Where Did My Usage Go: a shareable recap of your coding-agent usage",
+  "owner": {"name": "valenxi"},
+  "plugins": [
+    {
+      "name": "where-did-my-usage-go",
+      "source": "./",
+      "description": "Turn your local coding-agent history into a shareable card: recorded tokens, API-equivalent cost, where it went, and a roast."
+    }
+  ]
+}
