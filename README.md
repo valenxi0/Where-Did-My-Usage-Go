@@ -63,13 +63,13 @@ The skill asks three questions, all on one screen:
 2. Which card style: classic, terminal, receipt, or all three to compare.
 3. Who's on the card: your name and @handle, your name with project names hidden, or anonymous.
 
-Then it makes the card. Afterward it offers a different theme, a Story or link-preview version, or a comparison with your plan's price. Re-exporting is free.
+The card appears about 10 seconds after you answer, with an automatic roast. Then the skill offers an upgrade: it checks what you actually built, writes three custom roasts for you to pick from, and redraws the card. That takes about two more minutes. It also offers a different theme, a Story or link-preview version, or a comparison with your plan's price, and re-exporting is free.
 
 The skill remembers your answers, so the next time it asks only for the window.
 
 ### Use a cheap model
 
-A skill that measures your usage shouldn't eat much of it. Full mode mostly reads logs and fills in a template, and a small, fast model does that well. Before you run it, switch to one: `/model haiku` in Claude Code, or a small model in Codex. A bigger model writes slightly sharper roasts, and that's the only difference. Quick mode doesn't use a model at all.
+A skill that measures your usage shouldn't eat much of it. The first card costs almost nothing, and the upgrade mostly reads logs and fills in a template, which a small, fast model does well. Before you run it, switch to one: `/model haiku` in Claude Code, or a small model in Codex. A bigger model writes slightly sharper roasts, and that's the only difference.
 
 To make a card without an agent, which uses no tokens:
 
@@ -100,7 +100,7 @@ collect.py  ->  draft.py  ->  agent checks the work and writes roasts  ->  expor
    Cursor keeps no token counts on your machine, so the skill can count its activity but not its tokens.
 3. **It adds up the numbers.** It totals tokens by tool, project, and model. It counts prompt habits and stores only the counts. It finds your busiest hour and weekday, and how much of Codex's plan window you used across every reset. It also totals the window before yours, to show the trend.
 4. **It prices the tokens.** `draft.py` prices each model from a [price table](skills/where-did-my-usage-go/references/pricing.json) copied from Anthropic's and OpenAI's pricing pages, with a source link on every row. It prices uncached input, cache reads, cache writes, output, and long-context requests separately. `check_prices.py` compares the table with OpenRouter's prices.
-5. **It writes the roast.** Quick mode uses the best automatic line. In full mode, the agent sets the effort next to what you built ("Codex hit its weekly limit twice for a menu bar app. The menu bar is 24 pixels tall.") and you pick one.
+5. **It writes the roast.** The first card uses the best automatic line, phrased differently each week. In the upgrade, the agent sets the effort next to what you built ("Codex hit its weekly limit twice for a menu bar app. The menu bar is 24 pixels tall.") and you pick one.
 6. **It draws the card** with bundled fonts, so the card looks the same on every operating system.
 
 Windows end at the last local midnight, so every run on the same day gives the same card. Add `--through-now` to include today.
@@ -109,7 +109,7 @@ Windows end at the last local midnight, so every run on the same day gives the s
 
 - **It reads only the agent history folders in the table above.** It looks up known agent commands by name and never lists the other programs on your machine. It never starts an agent, signs in, or uses your plan allowance.
 - **It keeps reports in a private folder that only your user account can read.** The folder is `~/Library/Application Support/where-did-my-usage-go` on macOS, `%LOCALAPPDATA%` on Windows, `~/.local/share` on Linux, or whatever `WDMUG_DATA_DIR` names. The skill writes nothing into its own folder or into any repository.
-- **The scripts make no network requests and no model calls.** There are two exceptions, and you choose both. `uv` may download Pillow once, and `check_prices.py` downloads OpenRouter's public price list. In full mode, your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Quick mode saves no excerpts at all, only numbers, and sends nothing anywhere.
+- **The scripts make no network requests and no model calls.** There are two exceptions, and you choose both. `uv` may download Pillow once, and `check_prices.py` downloads OpenRouter's public price list. If you take the upgrade, your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Running `quick.py` yourself, without an agent, saves only numbers and sends nothing anywhere.
 - **It stores prompt habits as counts.** The only phrases it saves word for word come from a fixed list of stock replies such as "continue" and "try again".
 - **The card shows only what you allow.** Project names appear only when you pick "everything". Otherwise projects get generic labels such as `Swift app`. Cards never show prompts, file contents, paths, or keys.
 - **Export blocks leaks.** Before drawing the card, `export_card.py` checks every piece of text on it. It refuses to export if anything looks like an API key, token, private key, email address, home-folder path, or IP address.
@@ -122,7 +122,7 @@ Windows end at the last local midnight, so every run on the same day gives the s
 - **Tier** is tokens per hour, averaged over at least one day. The tiers are Warm-up, Regular (100K an hour), Heavy (1M), Unhinged (6M), and Legendary (30M an hour, about 5B a week).
 - **vs previous week** compares your window with the one just before it, using only the agents the script reads by itself.
 - **Busiest** is when you sent prompts, by local hour and weekday. It shows when you were at the keyboard, not when the agents ran.
-- **Where it went** lists your top projects by tokens. In full mode, the agent checks each summary against files or commits. A request alone doesn't count as shipped.
+- **Where it went** lists your top projects by tokens. In the upgrade, the agent checks each summary against commits and its own completion messages. A request alone doesn't count as shipped.
 
 ## Run the scripts yourself
 

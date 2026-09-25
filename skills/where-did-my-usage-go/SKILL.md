@@ -19,30 +19,29 @@ Ask the rest in a single question-tool call, so the user picks from options and 
 
 Use defaults for everything else: the `paper` theme, the feed post format, and no plan price.
 
-## 2. Collect and draft
+## 2. Show the card first
+
+Run one command. It collects, drafts, and exports in about 10 seconds:
 
 ```
-python3 scripts/collect.py --days N          # or --hours N
-python3 scripts/draft.py [--name "NAME"] [--x-handle "@handle"]
+python3 scripts/quick.py --days N --style S --visibility named|private-projects|anonymous --excerpts [--name "NAME" --x-handle "@handle"]
 ```
 
-The collector reads only known agents' history folders. If the user mentions an agent it missed, rerun with `--agent-cli COMMAND` and follow `references/agent-discovery.md`. Windows end at the last local midnight. Add `--through-now` only if the user asks to include today.
+Use `--hours N` for windows under a day. If Pillow is missing, prefix it with `uv run --with pillow`. Show the PNG path it prints right away, before doing anything else.
 
-If the user asked for speed, or you can't read files, run `python3 scripts/quick.py --days N --style S --visibility V [--name ...]` instead, show the card, and stop.
+Windows end at the last local midnight; add `--through-now` only if the user asks to include today. The collector reads only known agents' history folders. If the user names an agent it missed, rerun with `--agent-cli COMMAND` and follow `references/agent-discovery.md`.
 
-## 3. Check the work and write the roast
+## 3. Offer the upgrade
 
-Read `references/full-mode.md` now. It covers project summaries, generic labels for hidden names, missing prices, and the roast method. Write three roasts, show them with the best automatic line from `roast_options`, and let the user pick.
+Ask once: "Want me to check what you built and write a custom roast? About two minutes." Also mention that a different theme, a Story version, or their plan price is a free re-export.
 
-## 4. Export
+If they want the upgrade, read `references/full-mode.md` and follow it: summaries from `evidence` and `clues`, then three roasts for the user to pick from. Then re-export:
 
 ```
-python3 scripts/export_card.py --visibility named|private-projects|anonymous --style classic|terminal|receipt
+python3 scripts/export_card.py --visibility V --style S [--theme T] [--formats post,story,og]
 ```
 
-`--style all` or `--theme all` writes previews to choose from. Add `--formats post,story,og` for a Story or a link preview. If Pillow is missing, prefix the command with `uv run --with pillow`. Export refuses text that looks like a key, email, path, or IP address. Fix `share.json` instead of forcing it.
-
-Show the PNG. Then offer once: "Want a different theme, a Story version, or your plan price on it? Re-exporting is free." For plan prices, rerun `draft.py --plan "Name=USD"` with prices the user states. Never guess a price.
+`--style all` or `--theme all` writes previews to choose from. For plan prices, rerun `draft.py --plan "Name=USD"` with prices the user states, then re-export. Never guess a price. Rerunning `draft.py` replaces upgrade edits (it keeps a backup), so add plan prices before the upgrade. Export refuses text that looks like a key, email, path, or IP address; fix `share.json` instead of forcing it.
 
 ## Truth rules
 
