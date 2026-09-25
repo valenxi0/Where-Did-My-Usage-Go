@@ -7,17 +7,22 @@ description: Make a shareable card of the user's recent coding-agent usage, with
 
 Turn a window of the user's local coding-agent history into a PNG card. Run scripts from this skill's directory. Reports stay in the user's private app-data folder. Never upload transcripts or reports, and never send them to an image model.
 
-## 1. Ask three questions
+## 1. Ask the questions
 
-Load remembered answers first: `python3 -c "import sys; sys.path.insert(0, 'scripts'); import prefs; print(prefs.load())"`. Skip any question the user or `prefs.json` already answered. If `prefs.json` has no name, don't claim one is saved.
+Load remembered answers first: `python3 -c "import sys; sys.path.insert(0, 'scripts'); import prefs; print(prefs.load())"`. If `prefs.json` has no name, don't claim one is saved.
 
-Ask the rest in a single question-tool call, so the user picks from options and must answer before you continue. In Claude Code that tool is `AskUserQuestion`, with all three questions in one call and the recommended option first. Only if the host has no such tool, or the call fails, ask the same three questions in one short message and wait for the reply:
+Ask in a single question-tool call, so the user picks from options and must answer before you continue. In Claude Code that tool is `AskUserQuestion`, with every question in one call. Only if the host has no such tool, or the call fails, ask the same questions in one short message and wait for the reply.
+
+Ask these two every run, even if `prefs.json` has an answer. Skip one only if the user already said it in this conversation:
 
 1. **Window:** Last 7 days (recommended), Last 24 hours, Last 30 days, Custom. Never pick one silently.
-2. **Card style:** Classic, Terminal, Receipt, or Show me all three.
+2. **Card style:** Classic, Terminal, Receipt, or Show me all three. If `prefs.json` has a style, list it first as "(last time)".
+
+Ask this one only when `prefs.json` has no answer. If it has one, say which in the question text (for example "Using valenxi @valenxi, project names shown") so the user can change it:
+
 3. **Who's on the card:** name and @handle, name but hide project names, or anonymous. If they pick a name, ask for it in the same turn. Never infer a name or handle from the machine or logs.
 
-Use defaults for everything else: the `paper` theme, the feed post format, and no plan price.
+Use defaults for everything else: the remembered or `paper` theme, the feed post format, and no plan price.
 
 ## 2. Show the card first
 

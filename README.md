@@ -65,7 +65,7 @@ The skill asks three questions, all on one screen:
 
 The card appears about 10 seconds after you answer, with an automatic roast. Then the skill offers an upgrade: it checks what you actually built, writes three custom roasts for you to pick from, and redraws the card. That takes about two more minutes. It also offers a different theme, a Story or link-preview version, or a comparison with your plan's price, and re-exporting is free.
 
-The skill remembers your answers, so the next time it asks only for the window.
+The skill remembers who's on the card, so after the first run it asks only for the window and the style, with last time's style listed first.
 
 ### Use a cheap model
 
