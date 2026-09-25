@@ -21,7 +21,7 @@ All collectors live in `skills/where-did-my-usage-go/scripts/collect.py`.
 1. Find where the agent saves its history on disk, and check the format by reading it. Never run the agent to create test data.
 2. Write a reader that takes the history path plus the window's `start` and `end`, and returns sessions in the same shape as the existing readers: `agent`, `session_id`, `project`, `tokens` (`input_tokens`, `output_tokens`, `cached_input_tokens`), `model_usage`, `prompts`, `final_messages`, and `habits`. Use `tokens: None` if the agent doesn't record tokens. Don't write zero.
 3. Count only events inside the window, and remove duplicates if the agent repeats messages. `devin_sessions` and `claude_session` both show how.
-4. Register the agent in `discover()` and `read_sessions()`, and add it to `AUTO_AGENTS` if the reader is automatic.
+4. Add its command to `KNOWN_CLIS`, register it in `discover()` and `read_sessions()`, and add it to `AUTO_AGENTS` if the reader is automatic.
 5. Add a test in `tests/test_reports.py` built from a small, made-up history file. Never commit real transcripts.
 6. Add the agent to the "How it works" table in the README.
 

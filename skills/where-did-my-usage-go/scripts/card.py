@@ -8,8 +8,6 @@ import re
 
 from pricing import valid_estimate
 
-CREATOR_CREDIT = "Created by @valenxi on X"
-CREATOR_URL = "https://x.com/valenxi"
 REPO_LABEL = "github.com/valenxi0/where-did-my-usage-go"
 REPO_URL = "https://github.com/valenxi0/Where-Did-My-Usage-Go"
 FALLBACK_ROAST = "The tokens would like a word."

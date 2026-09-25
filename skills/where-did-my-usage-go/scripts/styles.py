@@ -11,18 +11,19 @@ from functools import lru_cache
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 import render_png as R
-from card import CREATOR_CREDIT, REPO_LABEL, busiest, compact, hour_label, number, price, view
+from card import REPO_LABEL, busiest, compact, hour_label, number, price, view
 
 SIZE = (1080, 1350)
 
 
 @lru_cache(maxsize=None)
 def _noise_tile():
-    """Seeded grain, so the same report always renders the same bytes."""
+    """Seeded, softened grain: the same report always renders the same bytes, and the
+    blur keeps the PNG around 400KB instead of 1MB."""
     rng = random.Random(7)
     tile = Image.new("L", (256, 256))
     tile.putdata([rng.randint(88, 168) for _ in range(256 * 256)])
-    return tile.convert("RGB")
+    return tile.filter(ImageFilter.GaussianBlur(2.5)).convert("RGB")
 
 
 def grain(image, amount):
@@ -38,7 +39,7 @@ def backdrop(center, edge, spread):
     fade = Image.new("L", SIZE, 0)
     ImageDraw.Draw(fade).ellipse((-spread, -spread // 2, SIZE[0] + spread, SIZE[1] + spread // 2), fill=255)
     fade = fade.filter(ImageFilter.GaussianBlur(220))
-    return grain(Image.composite(Image.new("RGB", SIZE, center), Image.new("RGB", SIZE, edge), fade), 0.06)
+    return Image.composite(Image.new("RGB", SIZE, center), Image.new("RGB", SIZE, edge), fade)
 
 
 def drop_shadow(canvas, mask, offset, blur, opacity):
@@ -135,7 +136,6 @@ def terminal(data, visibility):
     R.text(draw, (x, 1262), REPO_LABEL, small, dim)
     cursor = x + R.width(draw, REPO_LABEL, small) + 8
     draw.rectangle((cursor, 1246, cursor + 12, 1266), fill=green)
-    R.text(draw, (right, 1262), CREATOR_CREDIT, small, dim, anchor="rs")
     # Float the window on a slate gradient, the way developers share code screenshots.
     window = image.crop((48, 48, 1033, 1303))
     mask = Image.new("L", window.size, 0)
@@ -293,8 +293,6 @@ def receipt(data, visibility):
         draw.rectangle((x, y, x + 1 + (x * 7919) % 4, y + 40), fill=ink)
     y += 70
     centered(y, REPO_LABEL, mono, dim)
-    y += 28
-    centered(y, CREATOR_CREDIT, mono, dim)
     height = y + 44
     # Cut the paper out with a torn bottom edge, add grain, and lay it on a gray desk with a slight tilt.
     teeth = round(width / 20)
@@ -304,7 +302,7 @@ def receipt(data, visibility):
     for index in range(teeth):
         x = index * width / teeth
         mask_draw.polygon([(x, height), (x + width / teeth / 2, height + 14), (x + width / teeth, height)], fill=255)
-    strip = grain(sheet.crop((0, 0, width, height + 14)), 0.10).convert("RGBA")
+    strip = grain(sheet.crop((0, 0, width, height + 14)), 0.25).convert("RGBA")
     strip.putalpha(paper_mask)
     strip = strip.rotate(-1.0, resample=Image.BICUBIC, expand=True)
     room = SIZE[1] - 90

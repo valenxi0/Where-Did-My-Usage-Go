@@ -519,37 +519,30 @@ def grok_session(path, start, end):
             "prompts": [], "final_messages": [], "first_activity_at": first_activity.isoformat()}
 
 
-def inventory_executables(path_value=None):
-    """List executable command names on PATH without launching any command."""
-    names = set()
-    windows = os.name == "nt"
-    extensions = {value.lower() for value in os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD").split(";") if value}
-    for directory in (path_value if path_value is not None else os.environ.get("PATH", "")).split(os.pathsep):
-        if not directory:
-            continue
-        try:
-            with os.scandir(directory) as entries:
-                for entry in entries:
-                    try:
-                        if not entry.is_file():
-                            continue
-                        if windows:  # Windows marks executables by extension, and every file passes X_OK
-                            stem, suffix = os.path.splitext(entry.name)
-                            if suffix.lower() in extensions:
-                                names.add(stem)
-                        elif os.access(entry.path, os.X_OK):
-                            names.add(entry.name)
-                    except OSError:
-                        continue
-        except OSError:
-            continue
-    return sorted(names)
+# The only commands the collector looks up. It never lists the rest of PATH.
+KNOWN_CLIS = {
+    "Codex": "codex", "Claude Code": "claude", "OpenCode": "opencode",
+    "Cursor": ("cursor-agent", "cursor"), "Gemini CLI": "gemini", "Devin": "devin",
+    "Aider": "aider", "Goose": "goose", "Amp": "amp",
+    "GitHub Copilot CLI": "copilot", "Factory Droid": "droid",
+    "Hermes": "hermes", "Kimi Code": "kimi", "Grok": ("grok", "agent"),
+}
+
+
+def available_commands(names, path_value=None):
+    """Which of these specific command names are installed. Nothing else on PATH is read."""
+    return sorted(name for name in set(names) if shutil.which(name, path=path_value))
+
+
+def known_commands(extra=()):
+    return [command for value in KNOWN_CLIS.values()
+            for command in (value if isinstance(value, tuple) else (value,))] + list(extra)
 
 
 def discover(codex_home, claude_home, opencode_home, executable_names=None, extra_agent_clis=(),
              factory_home=None, kimi_home=None, grok_home=None, devin_home=None):
     sources = []
-    executable_names = set(inventory_executables() if executable_names is None else executable_names)
+    executable_names = set(available_commands(known_commands(extra_agent_clis)) if executable_names is None else executable_names)
     factory_home = factory_home or Path.home() / ".factory"
     kimi_home = kimi_home or Path.home() / ".kimi-code"
     grok_home = grok_home or Path.home() / ".grok"
@@ -558,16 +551,8 @@ def discover(codex_home, claude_home, opencode_home, executable_names=None, extr
     factory_files = sorted((factory_home / "sessions").glob("*/*.jsonl"))
     kimi_files = sorted((kimi_home / "sessions").glob("**/agents/main/wire.jsonl"))
     grok_files = sorted((grok_home / "sessions").glob("**/updates.jsonl"))
-    known_clis = {
-        "Codex": "codex", "Claude Code": "claude", "OpenCode": "opencode",
-        "Cursor": ("cursor-agent", "cursor"), "Gemini CLI": "gemini", "Devin": "devin",
-        "Aider": "aider", "Goose": "goose", "Amp": "amp",
-        "GitHub Copilot CLI": "copilot", "Factory Droid": "droid",
-        "Hermes": "hermes", "Kimi Code": "kimi", "Grok": ("grok", "agent"),
-    }
-
     def source(agent, files, history_root=None, supported=False):
-        commands = known_clis[agent]
+        commands = KNOWN_CLIS[agent]
         commands = commands if isinstance(commands, tuple) else (commands,)
         command = None
         for candidate in commands:
@@ -613,10 +598,7 @@ def discover(codex_home, claude_home, opencode_home, executable_names=None, extr
         entry = source(agent, 0, history_root=root)
         if entry["status"] != "not found":
             sources.append(entry)
-    registered_commands = {
-        command for value in known_clis.values()
-        for command in (value if isinstance(value, tuple) else (value,))
-    }
+    registered_commands = set(known_commands())
     for command in sorted(set(extra_agent_clis) - registered_commands):
         if command in executable_names:
             sources.append({"agent": f"Additional CLI: {command}", "status": "detected, unparsed",
@@ -706,6 +688,8 @@ def main():
     parser.add_argument("--kimi-home", type=Path, default=Path.home() / ".kimi-code")
     parser.add_argument("--grok-home", type=Path, default=Path.home() / ".grok")
     parser.add_argument("--devin-home", type=Path, default=Path.home() / ".local/share/devin")
+    parser.add_argument("--counts-only", action="store_true",
+                        help="Keep numbers only: drop prompt and reply excerpts (quick mode uses this)")
     parser.add_argument("--through-now", action="store_true",
                         help="End the window now instead of at the last midnight (--days) or top of the hour (--hours)")
     parser.add_argument("--agent-cli", action="append", default=[], metavar="COMMAND",
@@ -716,7 +700,7 @@ def main():
         parser.error("Time window must be positive")
     end = window_end(datetime.now().astimezone(), args.days is not None, args.through_now)
     start = end - duration
-    executable_names = inventory_executables()
+    executable_names = available_commands(known_commands(args.agent_cli))
     missing_clis = set(args.agent_cli) - set(executable_names)
     if missing_clis:
         parser.error("Agent CLI not found on PATH: " + ", ".join(sorted(missing_clis)))
@@ -725,19 +709,22 @@ def main():
         args.factory_home, args.kimi_home, args.grok_home, args.devin_home)
     sessions = read_sessions(args, codex_files, claude_files, start, end, sources)
     previous = read_sessions(args, codex_files, claude_files, start - duration, start)
+    if args.counts_only:
+        for session in sessions:
+            session["prompts"], session["final_messages"] = [], []
     active_agents = {session["agent"] for session in sessions}
     for source in sources:
         if source["agent"] in active_agents:
             source["activity_in_window"] = True
     report = {"window_start": start.isoformat(), "window_end": end.isoformat(),
-              "cli_inventory": executable_names, "sources": sources, "sessions": sessions,
+              "sources": sources, "sessions": sessions,
               "previous_window": previous_summary(previous, start - duration, start)}
     ensure_parent(args.output)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     args.output.chmod(0o600)
     print(f"Collected {len(sessions)} sessions from {sum(source.get('files', 0) for source in sources)} local history files into {args.output}")
-    print(f"Inventoried {len(executable_names)} executable command names on PATH; review cli_inventory for additional coding agents.")
-    print("Contains private transcript excerpts. Review before sharing.")
+    print("Checked known coding agents only. Name any other agent with --agent-cli COMMAND.")
+    print("Numbers only; no transcript excerpts saved." if args.counts_only else "Contains private transcript excerpts. Review before sharing.")
 
 
 if __name__ == "__main__":

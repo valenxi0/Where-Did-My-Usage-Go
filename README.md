@@ -57,15 +57,13 @@ Making the PNG needs Python 3.11 or later and Pillow. If Pillow is missing, the 
 
 You can add a window, as in `/where-did-my-usage-go last 7 days`, or ask in plain words: "where did my usage go this week?"
 
-The skill asks these questions once, then makes the card:
+The skill asks three questions, all on one screen:
 
-1. The window: last 24 hours, 7 days, 30 days, or a custom range.
-2. Quick or full mode. Quick mode is free, takes about 5 seconds, and picks a roast automatically. In full mode the agent checks what you built and writes three roasts for you to choose from.
-3. Your name and X handle, or `Player One`.
-4. What the card shows: everything, everything except project names, or nothing that identifies you.
-5. Your plans and their monthly prices, if you want the card to compare them with the list price.
-6. The card style. You can ask to see all three first.
-7. The theme for the classic style, and the formats you want (post, Story, link preview).
+1. Which window: last 7 days, 24 hours, 30 days, or a custom range.
+2. Which card style: classic, terminal, receipt, or all three to compare.
+3. Who's on the card: your name and @handle, your name with project names hidden, or anonymous.
+
+Then it makes the card. Afterward it offers a different theme, a Story or link-preview version, or a comparison with your plan's price. Re-exporting is free.
 
 The skill remembers your answers, so the next time it asks only for the window.
 
@@ -86,7 +84,7 @@ uv run --with pillow python scripts/quick.py --days 7 --name 'Your Name' --style
 collect.py  ->  draft.py  ->  agent checks the work and writes roasts  ->  export_card.py
 ```
 
-1. **It finds your agents.** `collect.py` lists every command on your `PATH` without running any of them, and looks in each known agent's data folder. This catches agents you installed but haven't used, agents that exist only as a data folder, and agents with generic command names, such as Grok's `agent`. In full mode, the agent also reads the whole command list for coding agents the script doesn't know and adds them with `--agent-cli`.
+1. **It checks for the agents it knows.** `collect.py` looks up each known agent's command (`codex`, `claude`, `devin`, and so on) and its history folder, and reads nothing else. It never lists the rest of your `PATH` or runs any command. If you use an agent it doesn't know, name it with `--agent-cli COMMAND`.
 2. **It reads their history without changing it.**
 
    | Agent | History location |
@@ -109,9 +107,9 @@ Windows end at the last local midnight, so every run on the same day gives the s
 
 ## Privacy
 
-- **It only reads your agent histories.** It never starts an agent, signs in, or uses your plan allowance.
+- **It reads only the agent history folders in the table above.** It looks up known agent commands by name and never lists the other programs on your machine. It never starts an agent, signs in, or uses your plan allowance.
 - **It keeps reports in a private folder that only your user account can read.** The folder is `~/Library/Application Support/where-did-my-usage-go` on macOS, `%LOCALAPPDATA%` on Windows, `~/.local/share` on Linux, or whatever `WDMUG_DATA_DIR` names. The skill writes nothing into its own folder or into any repository.
-- **The scripts make no network requests and no model calls.** There are two exceptions, and you choose both. `uv` may download Pillow once, and `check_prices.py` downloads OpenRouter's public price list. In full mode, your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Quick mode sends nothing anywhere.
+- **The scripts make no network requests and no model calls.** There are two exceptions, and you choose both. `uv` may download Pillow once, and `check_prices.py` downloads OpenRouter's public price list. In full mode, your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Quick mode saves no excerpts at all, only numbers, and sends nothing anywhere.
 - **It stores prompt habits as counts.** The only phrases it saves word for word come from a fixed list of stock replies such as "continue" and "try again".
 - **The card shows only what you allow.** Project names appear only when you pick "everything". Otherwise projects get generic labels such as `Swift app`. Cards never show prompts, file contents, paths, or keys.
 - **Export blocks leaks.** Before drawing the card, `export_card.py` checks every piece of text on it. It refuses to export if anything looks like an API key, token, private key, email address, home-folder path, or IP address.

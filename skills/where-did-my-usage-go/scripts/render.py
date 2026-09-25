@@ -6,7 +6,7 @@ import html
 import json
 from pathlib import Path
 
-from card import CREATOR_CREDIT, CREATOR_URL, REPO_LABEL, REPO_URL, compact, number, plural, view
+from card import REPO_LABEL, REPO_URL, compact, number, plural, view
 
 
 def esc(value):
@@ -78,7 +78,7 @@ footer a:first-child {{ color: var(--accent); }}
 <h2>Where it went</h2><ul>{projects}</ul>
 <h2>Numbers</h2><ul>{"".join(f"<li>{esc(fact)}</li>" for fact in facts)}</ul>
 <ul class="notes muted">{"".join(f"<li>{esc(note)}</li>" for note in card["notes"])}</ul>
-<footer><a href="{REPO_URL}">{REPO_LABEL}</a><a href="{CREATOR_URL}">{CREATOR_CREDIT}</a></footer>
+<footer><a href="{REPO_URL}">{REPO_LABEL}</a></footer>
 </article>
 </main></body></html>'''
 

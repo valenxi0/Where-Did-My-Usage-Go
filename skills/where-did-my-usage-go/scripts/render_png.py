@@ -11,7 +11,7 @@ try:
 except ImportError as exc:
     raise SystemExit("PNG export needs Pillow. Install it once with `python3 -m pip install Pillow`.") from exc
 
-from card import CREATOR_CREDIT, REPO_LABEL, TIERS, compact, hour_label, number, plural, price, stat_cells, view
+from card import REPO_LABEL, TIERS, compact, hour_label, number, plural, price, stat_cells, view
 
 SIZE = (1080, 1350)
 LEFT, RIGHT = 72, 1008
@@ -226,7 +226,6 @@ def footer(draw, card, bottom=1350):
     for index, note in enumerate(card["notes"][:2]):
         text(draw, (LEFT, bottom - 80 + index * 22), fit(draw, note, font(15, "mono"), RIGHT - LEFT), font(15, "mono"), C["faint"])
     text(draw, (LEFT, bottom - 32), REPO_LABEL, font(18, "mono-medium"), C["accent"])
-    text(draw, (RIGHT, bottom - 32), CREATOR_CREDIT, font(18, "mono"), C["muted"], anchor="rs")
 
 
 FORMATS = {"post": (1080, 1350), "story": (1080, 1920), "og": (1200, 630)}
@@ -296,7 +295,6 @@ def render_og(data, visibility, theme):
     for index, line in enumerate(lines):
         text(draw, (676, top + index * 38), line, font(30, "medium"), C["ink"])
     text(draw, (left, 574), REPO_LABEL, font(18, "mono-medium"), C["accent"])
-    text(draw, (right, 574), CREATOR_CREDIT, font(18, "mono"), C["muted"], anchor="rs")
     return image
 
 

@@ -248,7 +248,7 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("alert", anonymous)
         self.assertIn("Project 1", anonymous)
         self.assertIn("Player One found the token bonfire.", anonymous)
-        self.assertIn('href="https://x.com/valenxi">Created by @valenxi on X</a>', anonymous)
+        self.assertIn('href="https://github.com/valenxi0/Where-Did-My-Usage-Go">github.com/valenxi0/where-did-my-usage-go</a>', anonymous)
         self.assertIn("&lt;script&gt;", named)
         self.assertIn("https://x.com/secret_person", named)
         self.assertNotIn('class="avatar"', named)
@@ -461,17 +461,18 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(aider["cli"], "aider")
         self.assertFalse(aider["local_history"])
 
-    def test_inventory_and_additional_agent_do_not_depend_on_fixed_names(self):
+    def test_only_named_commands_are_looked_up_and_extra_agents_can_be_added(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            command = "future-coding-agent" + (".cmd" if os.name == "nt" else "")
-            (root / command).write_text("#!/bin/sh\n")
-            (root / command).chmod(0o755)
+            for name in ("future-coding-agent", "unrelated-tool"):
+                command = name + (".cmd" if os.name == "nt" else "")
+                (root / command).write_text("#!/bin/sh\n")
+                (root / command).chmod(0o755)
             (root / "ordinary-file").write_text("not executable")
-            names = collect.inventory_executables(str(root) + os.pathsep + str(root / "missing"))
+            path = str(root) + os.pathsep + str(root / "missing")
+            names = collect.available_commands(["future-coding-agent", "ordinary-file", "codex"], path)
             _, _, sources = collect.discover(root / "codex", root / "claude", root / "opencode", names, ["future-coding-agent"])
-        self.assertIn("future-coding-agent", names)
-        self.assertNotIn("ordinary-file", names)
+        self.assertEqual(names, ["future-coding-agent"])  # unrelated-tool was never looked up
         self.assertTrue(any(source["cli"] == "future-coding-agent" and source["status"] == "detected, unparsed" for source in sources))
 
     def test_generic_agent_command_is_identified_by_grok_install_location(self):

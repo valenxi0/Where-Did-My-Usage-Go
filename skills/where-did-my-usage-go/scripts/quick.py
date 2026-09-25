@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--formats", default="post")
     parser.add_argument("--style", choices=("classic", "terminal", "receipt"), default=remembered.get("style", "classic"))
     args, passthrough = parser.parse_known_args()
-    run("collect.py", "--days" if args.days else "--hours", str(args.days or args.hours))
+    run("collect.py", "--days" if args.days else "--hours", str(args.days or args.hours), "--counts-only")
     run("draft.py", *passthrough)
     run("export_card.py", "--visibility", args.visibility, "--formats", args.formats, "--style", args.style)
     print(f"Card ready in {private_dir()}. Project summaries are blank in quick mode; the full skill fills them in.")
