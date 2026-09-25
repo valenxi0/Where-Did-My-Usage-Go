@@ -1,6 +1,6 @@
 {
   "name": "where-did-my-usage-go",
-  "description": "Turn your local coding-agent history into a shareable card: recorded tokens, API-equivalent cost, where it went, and a roast.",
+  "description": "Turns your coding agents' local history into a shareable card with your tokens, their API list price, how much of your plan limit you used, and a roast.",
   "version": "0.2.0",
   "author": {"name": "valenxi", "url": "https://x.com/valenxi"},
   "homepage": "https://github.com/valenxi0/Where-Did-My-Usage-Go",

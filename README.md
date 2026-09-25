@@ -4,13 +4,13 @@
 
 You hit your weekly limit on Wednesday and have no idea how. This skill finds out.
 
-It reads the history your coding agents already keep on your machine (Claude Code, Codex, Devin, and more) and turns your week into a card you can post: how many tokens you burned, what that would cost at API list prices, which tools and projects ate it, how much of your plan limit you used, and a roast about it.
+It reads the history that Claude Code, Codex, Devin, and other coding agents already save on your machine, and turns your week into a card you can post. The card shows how many tokens you used, what they would cost at API list prices, which tools and projects used them, how much of your plan limit went, and a roast.
 
-It's just for fun. The numbers are real and carefully sourced, but the point is a weekly screenshot and a laugh, not accounting. Everything runs locally.
+It's a joke with real numbers. Token counts come from your agents' own logs, and prices come from each provider's pricing page. It is not a bill.
 
 ## A real week
 
-Here is one real week (Sep 17-23, 2026) from [@valenxi](https://x.com/valenxi), in all three card styles:
+This is [@valenxi](https://x.com/valenxi)'s week of Sep 17-23, 2026, in the three card styles:
 
 <p>
 <img src="docs/cards/classic.png" width="260" alt="Classic card: 1.3B tokens, $686 at API list prices, 178% of a weekly Codex limit, Unhinged tier">
@@ -18,19 +18,19 @@ Here is one real week (Sep 17-23, 2026) from [@valenxi](https://x.com/valenxi), 
 <img src="docs/cards/receipt.png" width="260" alt="Receipt card: an itemized bill per tool and model, with projects, peak hours, and a $686 total">
 </p>
 
-| Style | What it is |
+| Style | What it shows |
 |---|---|
-| **Classic** | Big numbers, the roast, and a stats row. Four color themes: `paper`, `night`, `ember`, `cobalt`. |
-| **Terminal** | Your week as CLI output with bar charts, floating on a slate background. |
-| **Receipt** | An itemized bill: each tool and its priciest models, where the tokens went, when you were busiest, and the total. |
+| Classic | The token total, the price, the roast, and a row of stats. It has four color themes: `paper`, `night`, `ember`, and `cobalt`. |
+| Terminal | The same week as command-line output with bar charts, in a window on a slate background. |
+| Receipt | An itemized bill with each tool and its most expensive models, the top projects, your busiest hours, and the total. |
 
 <img src="docs/cards/classic-night.png" width="260" alt="Classic card in the night theme"> <img src="docs/cards/link-preview.png" width="420" alt="1200 by 630 link preview version of the card">
 
-Every style also exports as an Instagram Story (1080×1920) and a link preview (1200×630).
+Each style also exports as an Instagram Story (1080×1920) and a link preview (1200×630).
 
 ## Install
 
-With [`npx skills`](https://www.npmjs.com/package/skills) (Claude Code, Codex, and other agents):
+With [`npx skills`](https://www.npmjs.com/package/skills), which installs into Claude Code, Codex, and other agents:
 
 ```bash
 npx skills add valenxi0/Where-Did-My-Usage-Go -g
@@ -43,33 +43,33 @@ As a Claude Code plugin:
 /plugin install where-did-my-usage-go@where-did-my-usage-go
 ```
 
-Or by hand: copy or symlink [`skills/where-did-my-usage-go`](skills/where-did-my-usage-go) into `~/.claude/skills` or `~/.codex/skills`.
+By hand, copy or symlink [`skills/where-did-my-usage-go`](skills/where-did-my-usage-go) into `~/.claude/skills` or `~/.codex/skills`.
 
-PNG export needs Python 3.11+ and Pillow. If Pillow is missing, the skill runs the export through `uv run --with pillow`.
+Making the PNG needs Python 3.11 or later and Pillow. If Pillow is missing, the skill runs the export with `uv run --with pillow`.
 
 ## Run it
 
-| Where | Type |
+| Agent | Command |
 |---|---|
 | Claude Code | `/where-did-my-usage-go` |
 | Claude Code, installed as a plugin | `/where-did-my-usage-go:where-did-my-usage-go` |
 | Codex | `$where-did-my-usage-go` |
 
-Add a window if you like (`/where-did-my-usage-go last 7 days`), or just ask: "where did my usage go this week?"
+You can add a window, as in `/where-did-my-usage-go last 7 days`, or ask in plain words: "where did my usage go this week?"
 
-The skill asks one round of questions, then makes the card:
+The skill asks these questions once, then makes the card:
 
-1. **Window:** last 24 hours, 7 days, 30 days, or custom
-2. **Mode:** *quick* (free, about 5 seconds, automatic roast) or *full* (the agent checks what you actually built and writes three roasts for you to pick from)
-3. **Name and X handle**, or stay `Player One`
-4. **What the card shows:** everything, project names hidden, or fully anonymous
-5. **Your plans** (optional), to compare the list price with what you pay
-6. **Card style:** classic, terminal, or receipt, or preview all three
-7. **Theme** for classic, and **formats** (post, Story, link preview)
+1. The window: last 24 hours, 7 days, 30 days, or a custom range.
+2. Quick or full mode. Quick mode is free, takes about 5 seconds, and picks a roast automatically. In full mode the agent checks what you built and writes three roasts for you to choose from.
+3. Your name and X handle, or `Player One`.
+4. What the card shows: everything, everything except project names, or nothing that identifies you.
+5. Your plans and their monthly prices, if you want the card to compare them with the list price.
+6. The card style. You can ask to see all three first.
+7. The theme for the classic style, and the formats you want (post, Story, link preview).
 
-It remembers your answers, so next week it only asks for the window.
+The skill remembers your answers, so the next time it asks only for the window.
 
-**No agent needed** (zero tokens):
+To make a card without an agent, which uses no tokens:
 
 ```bash
 cd skills/where-did-my-usage-go
@@ -79,48 +79,48 @@ uv run --with pillow python scripts/quick.py --days 7 --name 'Your Name' --style
 ## How it works
 
 ```
-collect.py  ->  draft.py  ->  (agent verifies and writes roasts)  ->  export_card.py
+collect.py  ->  draft.py  ->  agent checks the work and writes roasts  ->  export_card.py
 ```
 
-1. **Finds your agents.** The collector lists every command on your `PATH` without running any of them, and checks each known agent's data folder. That covers agents you installed but haven't used, agents found only through their data folder, and generic command names such as Grok's `agent`. In full mode the agent then reviews the whole command list for coding agents missing from the built-in list and adds them with `--agent-cli`.
-2. **Reads their history, read-only.**
+1. **It finds your agents.** `collect.py` lists every command on your `PATH` without running any of them, and looks in each known agent's data folder. This catches agents you installed but haven't used, agents that exist only as a data folder, and agents with generic command names, such as Grok's `agent`. In full mode, the agent also reads the whole command list for coding agents the script doesn't know and adds them with `--agent-cli`.
+2. **It reads their history without changing it.**
 
-   | Agent | Where the history lives |
+   | Agent | History location |
    |---|---|
-   | Codex | `~/.codex/sessions` (tokens, models, and plan-limit snapshots) |
+   | Codex | `~/.codex/sessions`, which also has tokens, models, and plan-limit snapshots |
    | Claude Code | `~/.claude/projects`, including subagent transcripts |
    | Devin CLI | `~/.local/share/devin/cli/sessions.db` |
    | OpenCode | `~/.local/share/opencode/opencode.db` |
-   | Factory Droid | `~/.factory/sessions` (activity only, no tokens) |
+   | Factory Droid | `~/.factory/sessions`, which records activity but not tokens |
    | Kimi Code | `~/.kimi-code/sessions` |
    | Grok | `~/.grok/sessions` |
 
-   Cursor stores no token counts on your machine, so it can only be counted as activity.
-3. **Adds it up.** Tokens by tool, project, and model. Prompt habits (counts only). Your busiest hour and day. How much of Codex's plan window you used, summed across resets. The same numbers for the previous window, for the trend.
-4. **Prices it.** Each model is priced from a [bundled, sourced price table](skills/where-did-my-usage-go/references/pricing.json) copied from Anthropic's and OpenAI's pricing pages. Uncached input, cache reads, cache writes, output, and long-context requests are priced separately. `check_prices.py` compares the table with OpenRouter.
-5. **Roasts you.** Quick mode picks the best automatic line. Full mode has the agent put the effort next to what you actually built ("Codex hit its weekly limit twice for a menu bar app. The menu bar is 24 pixels tall.") and lets you choose.
-6. **Renders the card** with bundled fonts, so it looks the same on every OS.
+   Cursor keeps no token counts on your machine, so the skill can count its activity but not its tokens.
+3. **It adds up the numbers.** It totals tokens by tool, project, and model. It counts prompt habits and stores only the counts. It finds your busiest hour and weekday, and how much of Codex's plan window you used across every reset. It also totals the window before yours, to show the trend.
+4. **It prices the tokens.** `draft.py` prices each model from a [price table](skills/where-did-my-usage-go/references/pricing.json) copied from Anthropic's and OpenAI's pricing pages, with a source link on every row. It prices uncached input, cache reads, cache writes, output, and long-context requests separately. `check_prices.py` compares the table with OpenRouter's prices.
+5. **It writes the roast.** Quick mode uses the best automatic line. In full mode, the agent sets the effort next to what you built ("Codex hit its weekly limit twice for a menu bar app. The menu bar is 24 pixels tall.") and you pick one.
+6. **It draws the card** with bundled fonts, so the card looks the same on every operating system.
 
-Windows end at the last local midnight, so every run that day gives the same card. Pass `--through-now` to include today.
+Windows end at the last local midnight, so every run on the same day gives the same card. Add `--through-now` to include today.
 
 ## Privacy
 
-- **Reads, never writes, your agent histories.** It never launches an agent, signs in, or uses up plan allowance.
-- **Keeps its reports in a private folder only you can read:** `~/Library/Application Support/where-did-my-usage-go` on macOS, `%LOCALAPPDATA%` on Windows, `~/.local/share` on Linux, or `WDMUG_DATA_DIR`. Nothing is written to the skill folder or any repository.
-- **Makes no network requests or model calls.** The only exceptions are opt-in: `uv` may download Pillow once, and `check_prices.py` fetches OpenRouter's public price list. In full mode your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Quick mode sends nothing anywhere.
-- **Prompt habits are stored as counts.** The only phrases saved word for word come from a fixed list of stock replies like "continue" and "try again".
-- **Shows only what you choose.** Project names appear only in "everything" mode; otherwise projects get generic labels like `Swift app`. Cards never show prompts, file contents, paths, or keys.
-- **Blocks leaks.** Before rendering, export scans every string on the card and refuses if something looks like an API key, token, private key, email address, home-folder path, or IP address.
+- **It only reads your agent histories.** It never starts an agent, signs in, or uses your plan allowance.
+- **It keeps reports in a private folder that only your user account can read.** The folder is `~/Library/Application Support/where-did-my-usage-go` on macOS, `%LOCALAPPDATA%` on Windows, `~/.local/share` on Linux, or whatever `WDMUG_DATA_DIR` names. The skill writes nothing into its own folder or into any repository.
+- **The scripts make no network requests and no model calls.** There are two exceptions, and you choose both. `uv` may download Pillow once, and `check_prices.py` downloads OpenRouter's public price list. In full mode, your agent reads short excerpts of your transcripts to summarize the work, the same way it reads any file you give it. Quick mode sends nothing anywhere.
+- **It stores prompt habits as counts.** The only phrases it saves word for word come from a fixed list of stock replies such as "continue" and "try again".
+- **The card shows only what you allow.** Project names appear only when you pick "everything". Otherwise projects get generic labels such as `Swift app`. Cards never show prompts, file contents, paths, or keys.
+- **Export blocks leaks.** Before drawing the card, `export_card.py` checks every piece of text on it. It refuses to export if anything looks like an API key, token, private key, email address, home-folder path, or IP address.
 
 ## What the numbers mean
 
-- **Tokens:** input plus output recorded in local transcripts. Not plan quota, a bill, or value created. Cache reads count as input.
-- **At API list prices:** what the same tokens would cost on each provider's standard API today. A `+` means it's a minimum: some models have no public price, or a log left out cache writes. It is not what you paid. See the [pricing guide](skills/where-did-my-usage-go/references/api-pricing.md).
-- **Plan limit** (`codex weekly 178%`): how much of Codex's own weekly limit you used inside the window, summed across resets.
-- **Tier:** tokens per hour, averaged over at least a day. Warm-up, Regular (100K/h), Heavy (1M/h), Unhinged (6M/h), and Legendary (30M/h, about 5B a week).
-- **vs previous week:** the same-length window just before yours, counting only agents parsed automatically.
-- **Busiest:** when you sent prompts, by local hour and weekday. That's when you were at the keyboard, not when the agents ran.
-- **Where it went:** your top projects by tokens. Full mode checks summaries against files or commits; a request alone doesn't count as shipped.
+- **Tokens** are input plus output from your local transcripts. They are not plan quota, a bill, or a measure of value. Cache reads count as input.
+- **At API list prices** is what the same tokens would cost on each provider's standard API today. A `+` means the price is a minimum, because some models have no public price or a log left out cache writes. It is not what you paid. The [pricing guide](skills/where-did-my-usage-go/references/api-pricing.md) has the details.
+- **Plan limit** (`codex weekly 178%`) is how much of Codex's own weekly limit you used during the window, added up across resets.
+- **Tier** is tokens per hour, averaged over at least one day. The tiers are Warm-up, Regular (100K an hour), Heavy (1M), Unhinged (6M), and Legendary (30M an hour, about 5B a week).
+- **vs previous week** compares your window with the one just before it, using only the agents the script reads by itself.
+- **Busiest** is when you sent prompts, by local hour and weekday. It shows when you were at the keyboard, not when the agents ran.
+- **Where it went** lists your top projects by tokens. In full mode, the agent checks each summary against files or commits. A request alone doesn't count as shipped.
 
 ## Run the scripts yourself
 
@@ -128,19 +128,19 @@ Windows end at the last local midnight, so every run that day gives the same car
 cd skills/where-did-my-usage-go
 python3 scripts/collect.py --days 7
 python3 scripts/draft.py --name 'Your Name' --x-handle '@you' --plan 'Claude Max=100'
-# edit share.json: summaries, highlight, roast
-uv run --with pillow python scripts/export_card.py --visibility private-projects --style all   # preview the styles
+# edit share.json to add summaries and choose the roast
+uv run --with pillow python scripts/export_card.py --visibility private-projects --style all   # preview the three styles
 uv run --with pillow python scripts/export_card.py --visibility private-projects --style receipt --formats post,story,og
 ```
 
 ## Contributing
 
-History formats change, and there are always more agents. Parsers for new agents, price updates, and new card styles are welcome.
+Agents change their history formats, and new agents keep appearing. Pull requests that add an agent, update a price, or add a card style are welcome.
 
 ```bash
 uv run --with pillow python -m unittest discover -s tests
-python3 examples/build_demo.py                                   # rebuild the fictional demo
+python3 examples/build_demo.py                                   # rebuild the fictional demo report
 python3 skills/where-did-my-usage-go/scripts/check_prices.py     # compare prices with OpenRouter
 ```
 
-Made by [@valenxi](https://x.com/valenxi). MIT licensed.
+Made by [@valenxi](https://x.com/valenxi). The code is MIT licensed. The bundled [Geist fonts](skills/where-did-my-usage-go/assets/fonts/OFL.txt) are under the SIL Open Font License.

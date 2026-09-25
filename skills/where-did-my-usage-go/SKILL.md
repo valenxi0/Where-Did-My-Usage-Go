@@ -1,6 +1,6 @@
 ---
 name: where-did-my-usage-go
-description: Create a shareable card of recent coding-agent activity, recorded tokens, and API-equivalent cost when the user asks where their AI coding usage went or what they built in a time window.
+description: Make a shareable card of the user's recent coding-agent usage, with tokens, API list price, plan-limit usage, top tools and projects, and a roast. Use when the user asks where their AI coding usage or limit went, or what they built in a time window.
 ---
 
 # Where Did My Usage Go
