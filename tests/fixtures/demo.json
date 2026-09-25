@@ -66,12 +66,12 @@
   "anonymous_roast": "You typed 48 prompts. The agents answered with 464.4M tokens. Brevity is a gift you only give yourself.",
   "roast_options": [
     "You typed 48 prompts. The agents answered with 464.4M tokens. Brevity is a gift you only give yourself.",
-    "At list prices, every prompt you typed cost $3.58. Choose your words accordingly.",
+    "Your prompts averaged $3.58 each at list prices. Short messages, expensive taste.",
     "gpt-6-sol alone ran up $112 at list prices. It was not there for the easy questions.",
     "68% of it went into one project. The other projects have noticed.",
-    "2.8M tokens an hour, averaged over every hour, including the ones you slept.",
+    "2.8M tokens an hour, nights included. The average doesn't sleep either.",
     "At list prices that's 19x what your plans cost for the week. Someone is subsidizing you.",
-    "More than double the previous week. Totally normal hobby behavior."
+    "2.4x the previous week. At this rate, next week is a full-time job."
   ],
   "roast_material": [
     "464.4M tokens from 48 typed prompts across 3 sessions",
@@ -150,7 +150,9 @@
       "summary": "Built search filters and cleaned up the mobile recipe view.",
       "anonymous_summary": "Built search filters and polished a mobile view.",
       "sessions": 1,
-      "tokens": 314540000
+      "tokens": 314540000,
+      "evidence": [],
+      "clues": []
     },
     {
       "name": "Weekend Game",
@@ -158,7 +160,9 @@
       "summary": "Prototyped a new level and fixed a stubborn save bug.",
       "anonymous_summary": "Prototyped a new level and fixed a save bug.",
       "sessions": 1,
-      "tokens": 149910000
+      "tokens": 149910000,
+      "evidence": [],
+      "clues": []
     },
     {
       "name": "Ideas Lab",
@@ -166,7 +170,9 @@
       "summary": "Explored three directions for a new tool.",
       "anonymous_summary": "Explored three directions for a new tool.",
       "sessions": 1,
-      "tokens": null
+      "tokens": null,
+      "evidence": [],
+      "clues": []
     }
   ],
   "notes": [

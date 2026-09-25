@@ -2,16 +2,19 @@
 
 Edit the private `share.json` that `draft.py` wrote. The schema is in `share-schema.md`.
 
+Aim to finish this whole step in about two minutes. The user is waiting on a joke card, not an audit.
+
 ## Summaries
 
-- Read the prompts and final messages in `activity.json` as clues, then confirm against files, commits, or explicit completion messages. Say "built" only with that proof. Otherwise say "worked on" or "explored".
+- Each project in `share.json` already has `evidence` (commit subjects from the window) and `clues` (the agents' last replies there). Write the summary from those. Open `activity.json` or the repo only if both are empty, and then read no more than a few files.
+- Say "built" only when a commit or a completion message shows it. Otherwise say "worked on" or "explored".
 - Write `summary` for named cards and `anonymous_summary` for hidden-name cards. The anonymous version names no product, company, client, or person.
 - The draft guesses `anonymous_name` from project files (`Swift app`, `Next.js app`). Replace it with a generic description of the work, such as `macOS menu bar app`. Keep `Project N` only when nothing better is known.
 - Set `highlight` to the single most concrete verified outcome.
 
 ## Prices
 
-`draft.py` prints `No verified price: agent / model` for anything the bundled table lacks. Check that provider's own pricing page. If a price exists, write a private override table and rerun with `--pricing /path/extra.json` (see `api-pricing.md`). `python3 scripts/check_prices.py --write-missing /path/extra.json` fills models that have no first-party price from OpenRouter. Review that file before using it. Never type a dollar amount into `share.json`.
+`draft.py` prints `No verified price: agent / model` for anything the bundled table lacks. Leave those alone by default. The `+` on the price already says some usage wasn't priced. Only if the user asks for a fuller price, run `python3 scripts/check_prices.py --write-missing /path/extra.json` and redraft with `--pricing /path/extra.json` (see `api-pricing.md`). Never type a dollar amount into `share.json`.
 
 ## Banked resets
 
@@ -25,9 +28,16 @@ The best roast puts the effort next to the result: a big number next to a small,
 2. Pick one concrete thing from the verified summaries or habits: what the project is, what kept breaking, or the stock phrase they kept typing.
 3. Put them side by side and end on the smaller, more specific one. Keep it deadpan and don't explain the joke.
 
+Write each of your three roasts in a different shape, for example:
+
+- **Contrast:** a huge effort next to a tiny result.
+- **Understatement:** state an extreme number as if it were ordinary.
+- **Callback:** turn the thing they kept typing or fixing back on them.
+
 Rules:
 
 - One or two short sentences, under about 110 characters.
+- Don't reuse the wording or shape of the examples below, or of the lines in `roast_options`. They show the idea, not a template.
 - Aim at the work and the workflow, never at the person's identity, looks, health, money, or skill.
 - Use only true facts. Quote only the stock phrases listed in `roast_material`, never a free-form prompt.
 - Don't open with their name, make tokens into characters, use exclamation marks or emojis, or call tokens money spent.

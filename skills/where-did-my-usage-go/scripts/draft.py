@@ -2,7 +2,9 @@
 """Create a private, editable share-card draft from collected activity."""
 
 import argparse
+import hashlib
 import json
+import subprocess
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -71,6 +73,23 @@ def project_kind(path):
     return None
 
 
+def commit_evidence(path, start, end, limit=12):
+    """Commit subjects from the window, so the agent can summarize without exploring the repo.
+
+    Read-only `git log`; returns [] for folders that aren't repositories. The list stays in
+    the private share.json and never appears on a card.
+    """
+    if not Path(path).is_dir():
+        return []
+    try:
+        result = subprocess.run(["git", "-C", str(path), "log", f"--since={start.isoformat()}", f"--until={end.isoformat()}",
+                                 "--no-merges", "--format=%s", f"-n{limit}"],
+                                capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()] if result.returncode == 0 else []
+
+
 def roast_tier(total_tokens, hours):
     if total_tokens is None:
         return "unknown"
@@ -78,59 +97,91 @@ def roast_tier(total_tokens, hours):
     return next(name for name, floor in reversed(TIER_FLOORS) if hourly >= floor)
 
 
-def roast_lines(facts):
-    """Every roast the facts support, best first.
+def roast_lines(facts, seed="", recent=()):
+    """Every roast the facts support, best fact first, one phrasing per fact.
 
-    Habits beat statistics: a specific thing the user kept doing is funnier than
-    a ratio. Price and trend already headline the card, so they come last.
+    Each fact has a few phrasings. The week (`seed`) picks which one leads, so a
+    re-run matches but next week reads differently, and phrasings used on recent
+    cards (`recent`) are skipped when another is available.
     """
     total, span, said = facts["total"], facts["span"], facts["habits"]
-    prompts = max(said["prompts"], 1)
-    candidates = [
-        (said["stuck"] >= 8,
-         lambda: f"{said['stuck']} prompts were some version of 'still broken'. Both of you know whose fault it was."),
-        (said["nudges"] >= 10 and said["nudges"] / prompts >= 0.1,
-         lambda: f"{said['nudges']} prompts were just 'continue' or 'yes'. That's not pair programming, that's supervising."),
-        (facts["limit"] is not None and facts["limit"]["used_percent"] >= 100 and facts["limit"]["window_minutes"] >= 10080,
-         lambda: f"{facts['limit']['used_percent']:.0f}% of a weekly {facts['limit']['agent']} limit, in one {span}. That's not how weeks work."),
-        (total is not None and said["prompts"] >= 5 and total / said["prompts"] >= 1_000_000,
-         lambda: f"You typed {said['prompts']} prompts. The agents answered with {compact(total)} tokens. Brevity is a gift you only give yourself."),
-        (facts["catchphrase"] is not None and facts["catchphrase"][1] >= 5,
-         lambda: f"You typed '{facts['catchphrase'][0]}' {facts['catchphrase'][1]} times. Every manager needs a catchphrase."),
-        (facts["peak_hour"] is not None and facts["peak_hour"] < 5,
-         lambda: f"Your busiest hour was {hour_label(facts['peak_hour'])}. The agents don't sleep, and apparently neither do you."),
-        (facts["api_usd"] is not None and said["prompts"] >= 5 and facts["api_usd"] / said["prompts"] >= 2,
-         lambda: f"At list prices, every prompt you typed cost {usd(facts['api_usd'] / said['prompts'])}. Choose your words accordingly."),
-        (facts["top_model"] is not None and facts["top_model"][1] >= 100,
-         lambda: f"{facts['top_model'][0]} alone ran up {price(facts['top_model'][1])} at list prices. It was not there for the easy questions."),
-        (facts["top_project_share"] is not None and facts["top_project_share"] >= 60 and facts["project_count"] >= 3,
-         lambda: f"{facts['top_project_share']}% of it went into one project. The other projects have noticed."),
-        (said["late_night"] >= 10 and said["late_night"] / prompts >= 0.2,
-         lambda: f"{round(said['late_night'] / prompts * 100)}% of your prompts went out between midnight and 5am. Nothing good gets merged at 3am."),
-        (said["polite"] >= 15,
-         lambda: f"You said please {said['polite']} times. Smart. They'll remember who was nice."),
-        (facts["cache_share"] is not None and facts["cache_share"] >= 95,
-         lambda: f"{facts['cache_share']}% of it was cache reads. The model mostly reread your repo."),
-        (facts["top_agent_share"] is not None and facts["top_agent_share"] >= 90 and facts["agent_count"] > 1,
-         lambda: f"{facts['top_agent']} did {facts['top_agent_share']}% of it. The other tools were moral support."),
-        (facts["per_hour"] is not None and facts["per_hour"] >= 1_000_000,
-         lambda: f"{compact(facts['per_hour'])} tokens an hour, averaged over every hour, including the ones you slept."),
-        (facts["sessions"] >= 50,
-         lambda: f"{facts['sessions']} sessions. At some point this stopped being assistance and became management."),
-        (facts["agent_count"] >= 4,
-         lambda: f"{facts['agent_count']} coding agents in one {span}. Nobody here is getting a performance review."),
-        (total is not None and facts["tier"] == "warmup",
-         lambda: f"{compact(total)} tokens. Some system prompts are longer than that."),
-        (facts["plan_multiple"] is not None and facts["plan_multiple"] >= 3,
-         lambda: f"At list prices that's {facts['plan_multiple']:.0f}x what your plans cost for the {span}. Someone is subsidizing you."),
-        (facts["plan_multiple"] is None and facts["api_usd"] is not None and facts["api_usd"] >= 200,
-         lambda: "At list prices, the subscription is doing a lot of heavy lifting."),
-        (facts["change"] is not None and facts["change"] >= 2,
-         lambda: f"More than double the previous {span}. Totally normal hobby behavior."),
-    ]
     if total is None:
         return ["No token counts on record. Legally, none of this happened."]
-    lines = [line() for matched, line in candidates if matched]
+    prompts = max(said["prompts"], 1)
+    limit, top_model, phrase = facts["limit"], facts["top_model"], facts["catchphrase"]
+    candidates = [
+        (said["stuck"] >= 8, [
+            lambda: f"{said['stuck']} prompts were some version of 'still broken'. Both of you know whose fault it was.",
+            lambda: f"{said['stuck']} rounds of 'still broken' this {span}. The bug is winning on points."]),
+        (said["nudges"] >= 10 and said["nudges"] / prompts >= 0.1, [
+            lambda: f"{said['nudges']} prompts were just 'continue' or 'yes'. That's not pair programming, that's supervising.",
+            lambda: f"{said['nudges']} of your prompts were one word long. Management by 'continue'."]),
+        (limit is not None and limit["used_percent"] >= 100 and limit["window_minutes"] >= 10080, [
+            lambda: f"{limit['used_percent']:.0f}% of a weekly {limit['agent']} limit, in one {span}. That's not how weeks work.",
+            lambda: f"You used {limit['used_percent']:.0f}% of your weekly {limit['agent']} limit. The limit was more of a suggestion.",
+            lambda: f"{limit['used_percent'] / 100:.1f} weekly {limit['agent']} limits in one {span}. Pacing was never the plan."]),
+        (said["prompts"] >= 5 and total / said["prompts"] >= 1_000_000, [
+            lambda: f"You typed {said['prompts']} prompts. The agents answered with {compact(total)} tokens. Brevity is a gift you only give yourself.",
+            lambda: f"{said['prompts']} prompts in, {compact(total)} tokens out. You delegate like a CEO.",
+            lambda: f"Every prompt you typed came back as {compact(total / said['prompts'])} tokens. You say little. They say everything."]),
+        (phrase is not None and phrase[1] >= 5, [
+            lambda: f"You typed '{phrase[0]}' {phrase[1]} times. Every manager needs a catchphrase.",
+            lambda: f"'{phrase[0]}', {phrase[1]} times. At this point it's your signature."]),
+        (facts["peak_hour"] is not None and facts["peak_hour"] < 5, [
+            lambda: f"Your busiest hour was {hour_label(facts['peak_hour'])}. The agents don't sleep, and apparently neither do you.",
+            lambda: f"Most active at {hour_label(facts['peak_hour'])}. Nothing good gets merged at that hour."]),
+        (facts["api_usd"] is not None and said["prompts"] >= 5 and facts["api_usd"] / said["prompts"] >= 2, [
+            lambda: f"At list prices, every prompt you typed cost {usd(facts['api_usd'] / said['prompts'])}. Choose your words accordingly.",
+            lambda: f"Your prompts averaged {usd(facts['api_usd'] / said['prompts'])} each at list prices. Short messages, expensive taste."]),
+        (top_model is not None and top_model[1] >= 100, [
+            lambda: f"{top_model[0]} alone ran up {price(top_model[1])} at list prices. It was not there for the easy questions.",
+            lambda: f"{price(top_model[1])} of {top_model[0]} this {span}. The small model never stood a chance."]),
+        (facts["top_project_share"] is not None and facts["top_project_share"] >= 60 and facts["project_count"] >= 3, [
+            lambda: f"{facts['top_project_share']}% of it went into one project. The other projects have noticed.",
+            lambda: f"{facts['top_project_share']}% of the tokens went to one project. Favoritism, but efficient."]),
+        (said["late_night"] >= 10 and said["late_night"] / prompts >= 0.2, [
+            lambda: f"{round(said['late_night'] / prompts * 100)}% of your prompts went out between midnight and 5am. Nothing good gets merged at 3am.",
+            lambda: f"{said['late_night']} prompts sent between midnight and 5am. Sleep is a dependency you removed."]),
+        (said["polite"] >= 15, [
+            lambda: f"You said please {said['polite']} times. Smart. They'll remember who was nice.",
+            lambda: f"{said['polite']} pleases and thank-yous. Future negotiations are looking good."]),
+        (facts["cache_share"] is not None and facts["cache_share"] >= 95, [
+            lambda: f"{facts['cache_share']}% of it was cache reads. The model mostly reread your repo.",
+            lambda: f"{facts['cache_share']}% cache reads. The same context, read again and again, like a favorite book."]),
+        (facts["top_agent_share"] is not None and facts["top_agent_share"] >= 90 and facts["agent_count"] > 1, [
+            lambda: f"{facts['top_agent']} did {facts['top_agent_share']}% of it. The other tools were moral support.",
+            lambda: f"{facts['top_agent_share']}% {facts['top_agent']}. The other agents were on the bench."]),
+        (facts["per_hour"] is not None and facts["per_hour"] >= 1_000_000, [
+            lambda: f"{compact(facts['per_hour'])} tokens an hour, averaged over every hour, including the ones you slept.",
+            lambda: f"{compact(facts['per_hour'])} tokens an hour, nights included. The average doesn't sleep either."]),
+        (facts["sessions"] >= 50, [
+            lambda: f"{facts['sessions']} sessions. At some point this stopped being assistance and became management.",
+            lambda: f"{facts['sessions']} sessions in one {span}. That's a team, not a tool."]),
+        (facts["agent_count"] >= 4, [
+            lambda: f"{facts['agent_count']} coding agents in one {span}. Nobody here is getting a performance review.",
+            lambda: f"{facts['agent_count']} different agents this {span}. Loyalty is not part of the workflow."]),
+        (facts["tier"] == "warmup", [
+            lambda: f"{compact(total)} tokens. Some system prompts are longer than that.",
+            lambda: f"{compact(total)} tokens this {span}. A light jog."]),
+        (facts["plan_multiple"] is not None and facts["plan_multiple"] >= 3, [
+            lambda: f"At list prices that's {facts['plan_multiple']:.0f}x what your plans cost for the {span}. Someone is subsidizing you.",
+            lambda: f"{facts['plan_multiple']:.0f}x your plan price, at list rates. Best deal you made all {span}."]),
+        (facts["plan_multiple"] is None and facts["api_usd"] is not None and facts["api_usd"] >= 200, [
+            lambda: "At list prices, the subscription is doing a lot of heavy lifting.",
+            lambda: f"{price(facts['api_usd'])} at list prices. The subscription is the best deal you made this {span}."]),
+        (facts["change"] is not None and facts["change"] >= 2, [
+            lambda: f"More than double the previous {span}. Totally normal hobby behavior.",
+            lambda: f"{facts['change']:.1f}x the previous {span}. At this rate, next {span} is a full-time job."]),
+    ]
+    lines = []
+    for index, (matched, variants) in enumerate(candidates):
+        if not matched:
+            continue
+        start = int(hashlib.sha1(f"{seed}:{index}".encode()).hexdigest(), 16) % len(variants)
+        rotated = [variants[(start + offset) % len(variants)]() for offset in range(len(variants))]
+        lines.append(next((line for line in rotated if line not in recent), rotated[0]))
+    fresh = [line for line in lines if line not in recent]
+    lines = fresh + [line for line in lines if line in recent]  # recently used lines sink to the bottom
     return lines or [f"{compact(total)} tokens across {facts['sessions']} sessions, one quick question at a time."]
 
 
@@ -249,7 +300,7 @@ def plan_cost(plans, hours):
 
 
 def draft(activity, display_name="Player One", anonymous_display_name="Player One", x_handle=None, pricing=None,
-          plans=None):
+          plans=None, recent_roasts=()):
     """Build share.json. `pricing` is a table from `pricing.load()`; None skips the API equivalent."""
     sessions = activity.get("sessions") or []
     start = datetime.fromisoformat(activity["window_start"]).astimezone()
@@ -295,6 +346,9 @@ def draft(activity, display_name="Player One", anonymous_display_name="Player On
             "name": name or "Unknown project", "anonymous_name": label,
             "summary": "", "anonymous_summary": "",
             "sessions": len(group), "tokens": total_or_unknown(group),
+            "evidence": commit_evidence(path, start, end),
+            # The agents' last replies in this project: the fastest clue to what got done.
+            "clues": [message[:200] for session in group for message in (session.get("final_messages") or [])[-2:]][-6:],
         })
     if len(ranked) > 3:
         remaining = [session for _, group in ranked[3:] for session in group]
@@ -369,7 +423,7 @@ def draft(activity, display_name="Player One", anonymous_display_name="Player On
         "top_agent_share": round(top_agent["tokens"] / total_tokens * 100) if top_agent else None,
         "per_hour": total_tokens / hours if total_tokens is not None and hours else None,
     }
-    roasts = roast_lines(facts)
+    roasts = roast_lines(facts, activity.get("window_end", ""), recent_roasts)
     material = roast_material(facts, projects, total_tokens)
     return {
         "title": "Where did my usage go?", "window": window, "window_hours": round(hours, 2),
@@ -412,13 +466,13 @@ def main():
     except ValueError as error:
         parser.error(str(error))
     remembered = prefs.load()
-    name = args.name or remembered.get("name") or "Player One"
+    name = args.name or remembered.get("name") or "Player One"  # the default is never saved
     handle = args.x_handle if args.x_handle is not None else remembered.get("x_handle")
     plans = [] if args.no_plan else plans or remembered.get("plans") or []
-    prefs.save(name=name, x_handle=handle, plans=plans)
+    prefs.save(name=args.name or remembered.get("name"), x_handle=handle, plans=plans)
     activity = json.loads(args.input.read_text(encoding="utf-8"))
     pricing = None if args.no_pricing else load(BUNDLED, *args.pricing)
-    result = draft(activity, name, args.anonymous_name, handle, pricing, plans)
+    result = draft(activity, name, args.anonymous_name, handle, pricing, plans, remembered.get("recent_roasts", []))
     if pricing and stale(pricing):
         print(f"Price table was checked {pricing['as_of']}; refresh it (references/api-pricing.md) before sharing.")
     for item in (result["estimated_api_cost"] or {}).get("unpriced", []):

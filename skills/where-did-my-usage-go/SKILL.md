@@ -9,9 +9,9 @@ Turn a window of the user's local coding-agent history into a PNG card. Run scri
 
 ## 1. Ask three questions
 
-Load remembered answers first: `python3 -c "import sys; sys.path.insert(0, 'scripts'); import prefs; print(prefs.load())"`. Skip any question the user or `prefs.json` already answered.
+Load remembered answers first: `python3 -c "import sys; sys.path.insert(0, 'scripts'); import prefs; print(prefs.load())"`. Skip any question the user or `prefs.json` already answered. If `prefs.json` has no name, don't claim one is saved.
 
-Ask the rest in one turn. Use the host's multiple-choice tool if it has one (`AskUserQuestion` in Claude Code), recommended option first:
+Ask the rest in a single question-tool call, so the user picks from options and must answer before you continue. In Claude Code that tool is `AskUserQuestion`, with all three questions in one call and the recommended option first. Only if the host has no such tool, or the call fails, ask the same three questions in one short message and wait for the reply:
 
 1. **Window:** Last 7 days (recommended), Last 24 hours, Last 30 days, Custom. Never pick one silently.
 2. **Card style:** Classic, Terminal, Receipt, or Show me all three.

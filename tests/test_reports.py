@@ -326,9 +326,29 @@ class ReportTests(unittest.TestCase):
                  "per_hour": 10_000_000, "habits": {"prompts": 40, "nudges": 0, "stuck": 12, "polite": 0, "late_night": 0}}
         lines = draft.roast_lines(facts)
         self.assertIn("still broken", lines[0])
-        self.assertIn("Brevity", lines[1])
-        self.assertTrue(lines[-1].startswith("More than double"))
+        self.assertIn("prompt", lines[1].lower())  # the prompts-to-tokens fact comes second, whatever the phrasing
+        self.assertIn("previous week", lines[-1])  # the trend is the last resort
         self.assertFalse(any(line.startswith(("Sample", "Player")) or "!" in line for line in lines))
+
+    def test_commit_evidence_reads_only_the_window_and_ignores_non_repos(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.assertEqual(draft.commit_evidence(root, datetime(2026, 1, 1, tzinfo=timezone.utc),
+                                                   datetime(2026, 1, 8, tzinfo=timezone.utc)), [])
+            self.assertEqual(draft.commit_evidence(root / "missing", datetime(2026, 1, 1, tzinfo=timezone.utc),
+                                                   datetime(2026, 1, 8, tzinfo=timezone.utc)), [])
+
+    def test_roasts_rotate_by_week_and_skip_recent_lines(self):
+        facts = {"limit": None, "plan_multiple": None, "catchphrase": None, "peak_hour": None, "top_model": None,
+                 "top_project_share": None, "project_count": 1, "total": 900_000_000, "span": "week", "tier": "heavy",
+                 "sessions": 60, "agent_count": 2, "api_usd": None, "change": None, "cache_share": None,
+                 "top_agent": "Codex", "top_agent_share": 50, "per_hour": None,
+                 "habits": {"prompts": 0, "nudges": 0, "stuck": 0, "polite": 0, "late_night": 0}}
+        weeks = {draft.roast_lines(facts, f"2026-W{week}")[0] for week in range(1, 20)}
+        self.assertGreater(len(weeks), 1)  # different weeks lead with different phrasings
+        self.assertEqual(draft.roast_lines(facts, "2026-W3"), draft.roast_lines(facts, "2026-W3"))  # stable within a week
+        first = draft.roast_lines(facts, "2026-W3")[0]
+        self.assertNotEqual(draft.roast_lines(facts, "2026-W3", recent=[first])[0], first)
 
     def test_dotted_and_dashed_model_ids_match(self):
         self.assertEqual(pricing.model_key("z-ai/glm-5.3-flash"), pricing.model_key("glm-5-3-flash-high"))

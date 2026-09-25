@@ -78,7 +78,9 @@ def main():
         written = export(data, args.output, args.visibility, args.theme, formats, args.allow_flagged, args.style)
     except ValueError as error:
         parser.error(str(error))
-    prefs.save(visibility=args.visibility, theme=args.theme, style=args.style)
+    recent = [line for line in prefs.load().get("recent_roasts", []) if line != data.get("roast")]
+    prefs.save(visibility=args.visibility, theme=args.theme, style=args.style,
+               recent_roasts=([data["roast"]] if data.get("roast") else []) + recent[:7])
     print("Wrote " + ", ".join(str(path) for path in written) + ". Re-run to export again without an AI call.")
 
 
