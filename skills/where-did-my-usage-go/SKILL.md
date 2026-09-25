@@ -75,7 +75,7 @@ Good:
 - `You said please 112 times. Smart. They'll remember who was nice.`
 
 Bad:
-- `Resonance, the tokens have formed a union and named you in the complaint!` (generic, uses the name, personifies tokens)
+- `Sam, the tokens have formed a union and named you in the complaint!` (generic, uses the name, personifies tokens)
 - `1.7 billion tokens? Even your cache is asking for paid time off.` (about the number, not about them)
 - `Maybe learn to code instead of asking AI for everything.` (aimed at the person's ability)
 
