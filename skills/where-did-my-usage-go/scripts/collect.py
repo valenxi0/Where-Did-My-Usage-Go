@@ -522,6 +522,8 @@ def grok_session(path, start, end):
 def inventory_executables(path_value=None):
     """List executable command names on PATH without launching any command."""
     names = set()
+    windows = os.name == "nt"
+    extensions = {value.lower() for value in os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD").split(";") if value}
     for directory in (path_value if path_value is not None else os.environ.get("PATH", "")).split(os.pathsep):
         if not directory:
             continue
@@ -529,7 +531,13 @@ def inventory_executables(path_value=None):
             with os.scandir(directory) as entries:
                 for entry in entries:
                     try:
-                        if entry.is_file() and os.access(entry.path, os.X_OK):
+                        if not entry.is_file():
+                            continue
+                        if windows:  # Windows marks executables by extension, and every file passes X_OK
+                            stem, suffix = os.path.splitext(entry.name)
+                            if suffix.lower() in extensions:
+                                names.add(stem)
+                        elif os.access(entry.path, os.X_OK):
                             names.add(entry.name)
                     except OSError:
                         continue

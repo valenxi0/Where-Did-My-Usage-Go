@@ -464,8 +464,9 @@ class ReportTests(unittest.TestCase):
     def test_inventory_and_additional_agent_do_not_depend_on_fixed_names(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "future-coding-agent").write_text("#!/bin/sh\n")
-            (root / "future-coding-agent").chmod(0o755)
+            command = "future-coding-agent" + (".cmd" if os.name == "nt" else "")
+            (root / command).write_text("#!/bin/sh\n")
+            (root / command).chmod(0o755)
             (root / "ordinary-file").write_text("not executable")
             names = collect.inventory_executables(str(root) + os.pathsep + str(root / "missing"))
             _, _, sources = collect.discover(root / "codex", root / "claude", root / "opencode", names, ["future-coding-agent"])

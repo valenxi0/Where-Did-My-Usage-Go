@@ -34,7 +34,7 @@ class FreshInstallTests(unittest.TestCase):
                 {"timestamp": at, "type": "event_msg", "payload": {"type": "token_count",
                  "info": {"total_token_usage": {"input_tokens": 100, "output_tokens": 20, "cached_input_tokens": 30}}}},
             ]))
-            env = dict(os.environ, HOME=str(root), WDMUG_DATA_DIR=str(data_dir))
+            env = dict(os.environ, HOME=str(root), USERPROFILE=str(root), WDMUG_DATA_DIR=str(data_dir))
 
             missing_window = subprocess.run([sys.executable, str(install / "scripts/collect.py")],
                                             cwd=install, env=env, capture_output=True, text=True)
