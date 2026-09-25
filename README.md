@@ -10,12 +10,12 @@ It's a joke with real numbers. Token counts come from your agents' own logs, and
 
 ## A real week
 
-This is [@valenxi](https://x.com/valenxi)'s week of Sep 17-23, 2026, in the three card styles:
+This is [@valenxi](https://x.com/valenxi)'s week of Sep 18-24, 2026, in the three card styles:
 
 <p>
-<img src="docs/cards/classic.png" width="260" alt="Classic card: 1.3B tokens, $686 at API list prices, 178% of a weekly Codex limit, Unhinged tier">
+<img src="docs/cards/classic.png" width="260" alt="Classic card: 2.0B tokens, $993 at API list prices, 215% of a weekly Codex limit, Unhinged tier">
 <img src="docs/cards/terminal.png" width="260" alt="Terminal card: the same week as command-line output with bar charts for tools, projects, and prompts by hour">
-<img src="docs/cards/receipt.png" width="260" alt="Receipt card: an itemized bill per tool and model, with projects, peak hours, and a $686 total">
+<img src="docs/cards/receipt.png" width="260" alt="Receipt card: an itemized bill per tool and model, with projects, peak hours, and a $993 total">
 </p>
 
 | Style | What it shows |
@@ -118,7 +118,7 @@ Windows end at the last local midnight, so every run on the same day gives the s
 
 - **Tokens** are input plus output from your local transcripts. They are not plan quota, a bill, or a measure of value. Cache reads count as input.
 - **At API list prices** is what the same tokens would cost on each provider's standard API today. A `+` means the price is a minimum, because some models have no public price or a log left out cache writes. It is not what you paid. The [pricing guide](skills/where-did-my-usage-go/references/api-pricing.md) has the details.
-- **Plan limit** (`codex weekly 178%`) is how much of Codex's own weekly limit you used during the window, added up across resets.
+- **Plan limit** (`codex weekly 215%`) is how much of Codex's own weekly limit you used during the window, added up across resets.
 - **Tier** is tokens per hour, averaged over at least one day. The tiers are Warm-up, Regular (100K an hour), Heavy (1M), Unhinged (6M), and Legendary (30M an hour, about 5B a week).
 - **vs previous week** compares your window with the one just before it, using only the agents the script reads by itself.
 - **Busiest** is when you sent prompts, by local hour and weekday. It shows when you were at the keyboard, not when the agents ran.

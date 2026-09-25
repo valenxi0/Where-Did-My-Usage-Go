@@ -16,7 +16,7 @@ def esc(value):
 def share_detail(row):
     if row["share"] is None:
         return "no token data"
-    return f"{compact(row['tokens'])} tokens · {row['share']}%"
+    return f"{compact(row['tokens'])} tokens · {row['share_text']}"
 
 
 def render(data, visibility, image=None):

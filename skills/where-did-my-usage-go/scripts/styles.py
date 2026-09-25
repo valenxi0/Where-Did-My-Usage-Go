@@ -101,7 +101,7 @@ def terminal(data, visibility):
     R.text(draw, (x, y), "# tools", mono, dim)
     y += 42
     for row in card["agents"][:4]:
-        bar(y, row["label"], row["share"], f"{row['share']}%" if row["share"] is not None else "n/a")
+        bar(y, row["label"], row["share"], row["share_text"] or "n/a")
         y += 38
     y += 24
     R.text(draw, (x, y), "# projects", mono, dim)
@@ -248,7 +248,7 @@ def receipt(data, visibility):
         y += 32
         for row in card["projects"][:4]:
             columns(y, (row["label"], compact(row["tokens"]) if isinstance(row["tokens"], int) else "n/a",
-                        f"{row['share']}%" if row["share"] is not None else "--"))
+                        row["share_text"] or "--"))
             y += 30
         y += 4
         rule(y)

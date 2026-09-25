@@ -125,6 +125,13 @@ def _share(tokens, total):
     return round(tokens / total * 100) if isinstance(tokens, int) and total else None
 
 
+def share_text(share, tokens):
+    """`51%`, or `<1%` for real usage that rounds to zero."""
+    if share is None:
+        return None
+    return "<1%" if share == 0 and isinstance(tokens, int) and tokens > 0 else f"{share}%"
+
+
 def view(data, visibility):
     anonymous = visibility == "anonymous"
     hide_projects = visibility in ("anonymous", "private-projects")
@@ -148,6 +155,7 @@ def view(data, visibility):
             label, summary = item.get("name") or f"Project {index}", item.get("summary")
         project_rows.append({"label": label, "summary": summary or "", "tokens": item.get("tokens"),
                              "sessions": item.get("sessions"), "share": _share(item.get("tokens"), project_total)})
+        project_rows[-1]["share_text"] = share_text(project_rows[-1]["share"], item.get("tokens"))
 
     highlight = data.get("anonymous_highlight") if hide_projects else data.get("highlight")
     if not highlight:
@@ -173,7 +181,8 @@ def view(data, visibility):
         "per_hour": round(total / hours) if isinstance(total, int) and isinstance(hours, (int, float)) and hours > 0 else None,
         "sessions": sum(max(0, int(item.get("sessions") or 0)) for item in agents),
         "agents": [{"label": item.get("name") or "Unknown tool", "tokens": item.get("tokens"),
-                    "sessions": item.get("sessions"), "share": _share(item.get("tokens"), agent_total)}
+                    "sessions": item.get("sessions"), "share": _share(item.get("tokens"), agent_total),
+                    "share_text": share_text(_share(item.get("tokens"), agent_total), item.get("tokens"))}
                    for item in agents],
         "projects": project_rows,
         "highlight": highlight,

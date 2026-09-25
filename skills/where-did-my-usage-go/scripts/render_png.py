@@ -162,7 +162,7 @@ def tools(draw, card, top):
     x = LEFT
     label_face, metric_face = font(22, "medium"), font(20, "mono")
     for index, row in enumerate(card["agents"][:4]):
-        metric = f"{row['share']}%" if row["share"] is not None else "no token data"
+        metric = row["share_text"] or "no token data"
         label = fit(draw, row["label"], label_face, 200)
         item_width = 22 + width(draw, label, label_face) + 12 + width(draw, metric, metric_face)
         if x + item_width > RIGHT:
@@ -180,7 +180,7 @@ def projects(draw, card, top, rows):
     y = top + 42
     for row in card["projects"][:rows]:
         draw.line((LEFT, y, RIGHT, y), fill=C["line"], width=1)
-        metric = f"{row['share']}%" if row["share"] is not None else "n/a"
+        metric = row["share_text"] or "n/a"
         metric_face = font(30, "mono-medium")
         text(draw, (RIGHT, y + 44), metric, metric_face, C["accent"] if row["share"] is not None else C["muted"], anchor="rs")
         name_face = font(30, "semibold")
