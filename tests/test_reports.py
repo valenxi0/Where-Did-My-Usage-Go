@@ -410,6 +410,13 @@ class ReportTests(unittest.TestCase):
         kinds = {kind for kind, _ in scan.findings(["key sk-ant-abcdefghijklmnopqrstuv", "me@example.com", "/Users/sample/app"])}
         self.assertEqual(kinds, {"API key or token", "email address", "home folder path"})
 
+    def test_temp_and_home_folders_group_as_scratch_work(self):
+        self.assertEqual(draft.project_key("/private/tmp"), draft.SCRATCH)
+        self.assertEqual(draft.project_key("/tmp/wdmug/run"), draft.SCRATCH)
+        self.assertEqual(draft.project_key(str(Path.home())), draft.SCRATCH)
+        self.assertEqual(draft.project_key(str(Path.home() / "code/app")), str(Path.home() / "code/app"))
+        self.assertEqual(draft.project_key("/tmpfiles/app"), "/tmpfiles/app")
+
     def test_project_kind_gives_generic_labels(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

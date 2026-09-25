@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -23,11 +24,29 @@ def recorded_tokens(session):
     return int(usage.get("input_tokens") or 0) + int(usage.get("output_tokens") or 0)
 
 
+SCRATCH = "Scratch work"
+_TEMP_ROOTS = ("/tmp", "/private/tmp", "/var/folders", "/private/var/folders")
+
+
+def project_key(path):
+    """Group temp folders and the bare home folder as scratch work rather than a project named `tmp`."""
+    value = str(path or "Unknown")
+    try:
+        home = str(Path.home())
+    except RuntimeError:
+        home = None
+    temp = [root for root in (*_TEMP_ROOTS, os.environ.get("TMPDIR", "").rstrip("/")) if root]
+    if value == home or any(value == root or value.startswith(root + "/") for root in temp):
+        return SCRATCH
+    return value
+
+
 def group_sessions(sessions, key):
     groups = defaultdict(list)
     for session in sessions:
         if isinstance(session, dict):
-            groups[str(session.get(key) or "Unknown")].append(session)
+            value = str(session.get(key) or "Unknown")
+            groups[project_key(value) if key == "project" else value].append(session)
     return groups
 
 
@@ -334,9 +353,11 @@ def draft(activity, display_name="Player One", anonymous_display_name="Player On
     kinds = []
     for index, (path, group) in enumerate(ranked[:3], 1):
         name = Path(path).name if path != "Unknown" else "Unknown project"
-        kind = project_kind(path)
+        kind = project_kind(path) if path != SCRATCH else None
         kinds.append(kind)
-        if kind is None:
+        if path == SCRATCH:
+            label = SCRATCH
+        elif kind is None:
             label = f"Project {index}"
         elif kinds.count(kind) > 1:
             label = f"{kind} {kinds.count(kind)}"
