@@ -69,6 +69,10 @@ The skill asks these questions once, then makes the card:
 
 The skill remembers your answers, so the next time it asks only for the window.
 
+### Use a cheap model
+
+A skill that measures your usage shouldn't eat much of it. Full mode mostly reads logs and fills in a template, and a small, fast model does that well. Before you run it, switch to one: `/model haiku` in Claude Code, or a small model in Codex. A bigger model writes slightly sharper roasts, and that's the only difference. Quick mode doesn't use a model at all.
+
 To make a card without an agent, which uses no tokens:
 
 ```bash
