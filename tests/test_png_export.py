@@ -16,18 +16,18 @@ except SystemExit:
 @unittest.skipUnless(render_png, "Pillow is optional; run tests with `uv run --with pillow python -m unittest discover -s tests`")
 class PngExportTests(unittest.TestCase):
     def test_sample_is_social_size(self):
-        data = json.loads((Path(__file__).resolve().parents[1] / "examples/demo.json").read_text())
+        data = json.loads((Path(__file__).resolve().parents[1] / "tests/fixtures/demo.json").read_text())
         image = render_png.render(data, "named")
         self.assertEqual(image.size, (1080, 1350))
 
     def test_story_and_link_preview_sizes(self):
-        data = json.loads((Path(__file__).resolve().parents[1] / "examples/demo.json").read_text())
+        data = json.loads((Path(__file__).resolve().parents[1] / "tests/fixtures/demo.json").read_text())
         for fmt, size in (("story", (1080, 1920)), ("og", (1200, 630))):
             for theme in render_png.THEMES:
                 self.assertEqual(render_png.render(data, "anonymous", theme, fmt).size, size)
 
     def test_every_style_renders_every_format(self):
-        data = json.loads((Path(__file__).resolve().parents[1] / "examples/demo.json").read_text())
+        data = json.loads((Path(__file__).resolve().parents[1] / "tests/fixtures/demo.json").read_text())
         for style in render_png.STYLES:
             for fmt, size in render_png.FORMATS.items():
                 self.assertEqual(render_png.render(data, "anonymous", "paper", fmt, style).size, size)

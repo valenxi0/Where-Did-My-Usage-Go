@@ -135,11 +135,11 @@ uv run --with pillow python scripts/export_card.py --visibility private-projects
 
 ## Contributing
 
-Agents change their history formats, and new agents keep appearing. Pull requests that add an agent, update a price, or add a card style are welcome.
+Agents change their history formats, and new agents keep appearing. Pull requests that add an agent, update a price, or add a card style are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) walks through each one, and you can [request an agent](https://github.com/valenxi0/Where-Did-My-Usage-Go/issues/new?template=request-an-agent.yml) if you'd rather not write the parser.
 
 ```bash
 uv run --with pillow python -m unittest discover -s tests
-python3 examples/build_demo.py                                   # rebuild the fictional demo report
+python3 tests/fixtures/build_demo.py                             # rebuild the fictional demo report
 python3 skills/where-did-my-usage-go/scripts/check_prices.py     # compare prices with OpenRouter
 ```
 

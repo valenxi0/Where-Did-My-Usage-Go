@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT.parent / "skills/where-did-my-usage-go/scripts"))
+sys.path.insert(0, str(ROOT.parents[1] / "skills/where-did-my-usage-go/scripts"))
 
 from draft import draft  # noqa: E402
 from pricing import BUNDLED, load  # noqa: E402

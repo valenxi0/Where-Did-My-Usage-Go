@@ -163,7 +163,7 @@ class ReportTests(unittest.TestCase):
         self.assertTrue(all(entry["source_url"].startswith("https://") for entry in raw["models"]))
 
     def test_committed_demo_matches_a_rebuild_with_bundled_prices(self):
-        examples = ROOT.parents[2] / "examples"
+        examples = ROOT.parents[2] / "tests/fixtures"
         activity = json.loads((examples / "demo-activity.json").read_text())
         committed = json.loads((examples / "demo.json").read_text())
         spec = importlib.util.spec_from_file_location("build_demo", examples / "build_demo.py")

@@ -1,0 +1,37 @@
+name: Request an agent
+description: Ask for support for a coding agent the skill doesn't read yet.
+title: "Support <agent name>"
+labels: ["agent request"]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Agent
+      description: Name and link, for example "Aider (https://aider.chat)".
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command name
+      description: What you type to start it, for example `aider`.
+  - type: input
+    id: history
+    attributes:
+      label: Where it saves history
+      description: The folder or database it writes to, if you know, for example `~/.aider/history`.
+  - type: dropdown
+    id: tokens
+    attributes:
+      label: Does it record token counts locally?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+  - type: textarea
+    id: format
+    attributes:
+      label: Format notes
+      description: >-
+        Anything you know about the file format. Please don't paste real transcripts,
+        prompts, keys, or paths from your machine. A made-up example of one line is enough.
